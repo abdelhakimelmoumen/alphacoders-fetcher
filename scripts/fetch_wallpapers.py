@@ -1,13 +1,22 @@
 import os
 import json
 import requests
+from bs4::BeautifulSoup import BeautifulSoup # wait, standard import is just from bs4 import BeautifulSoup
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 
-# Add your categories here
+# Define your categories and their source URLs here
 CATEGORIES = {
-    "kawaii": "https://alphacoders.com/kawaii-wallpapers"
+    "kawaii": "https://alphacoders.com/kawaii-wallpapers",
+    # Add more categories here as needed, e.g.:
+    # "pastel": "https://alphacoders.com/pastel-wallpapers",
 }
+
+# Your GitHub raw base URL template
+GITHUB_USER = "abdelhakimelmoumen"
+REPO_NAME = "CuteWall-API" # Adjust if your repo name differs
+BRANCH = "main"
+BASE_RAW_URL = f"https://raw.githubusercontent.com/{GITHUB_USER}/{REPO_NAME}/refs/heads/{BRANCH}"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -15,97 +24,124 @@ HEADERS = {
 BASE_DIR = "wallpapers"
 JSON_FILE = "wallpapers.json"
 
-def load_json():
-    """Loads existing database to prevent duplicate entries."""
-    if os.path.exists(JSON_FILE):
-        with open(JSON_FILE, 'r', encoding='utf-8') as f:
-            try:
-                return json.load(f)
-            except json.JSONDecodeError:
-                return []
-    return []
-
-def save_json(data):
-    """Saves the updated database."""
-    with open(JSON_FILE, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=4)
+# Default tags map for categories
+CATEGORY_TAGS = {
+    "kawaii": ["anime", "cartoon", "chibi", "cute", "kawaii"],
+    "pastel": ["aesthetic", "minimal", "pastel", "pink", "soft"],
+    "animals": ["animals", "cute", "furry", "kawaii", "pets"],
+    "nature": ["calm", "landscape", "nature", "outdoors", "scenery"],
+    "galaxy": ["galaxy", "planets", "space", "stars"],
+    "ocean": ["blue", "calm", "ocean", "sea", "water"]
+}
 
 def fetch_wallpapers():
-    database = load_json()
-    existing_urls = {entry.get('original_url') for entry in database if 'original_url' in entry}
-    
-    downloaded_total = 0
+    # Structure to hold the final JSON data
+    master_data = {
+        "heroImages": [],
+        "categories": []
+    }
 
-    for category, url in CATEGORIES.items():
-        category_dir = os.path.join(BASE_DIR, category)
+    all_downloaded_wallpapers = []
+
+    for category_id, base_url in CATEGORIES.items():
+        category_dir = os.path.join(BASE_DIR, category_id)
         os.makedirs(category_dir, exist_ok=True)
-        print(f"Fetching category '{category}': {url}")
+        
+        category_wallpapers = []
+        counter = 1
+        page = 1
 
-        try:
-            response = requests.get(url, headers=HEADERS, timeout=15)
-            response.raise_for_status()
-        except requests.exceptions.RequestException as e:
-            print(f"Failed to fetch {url}: {e}")
-            continue
-
-        soup = BeautifulSoup(response.text, 'html.parser')
-        wallpapers = soup.select('picture img, .thumb-container img, .thumb-pic img')
-
-        # Find the next available index for this category based on what's already in the database
-        category_entries = [e for e in database if e.get('category') == category]
-        counter = len(category_entries) + 1
-
-        for img in wallpapers:
-            src = img.get('src') or img.get('data-src')
-            
-            if not src or not src.startswith('http'):
-                continue
-
-            if src.endswith('.svg') or any(keyword in src for keyword in ['avatar', 'logo', 'icon', 'badge']):
-                continue
-
-            if src in existing_urls:
-                continue
+        while True:
+            page_url = f"{base_url}?page={page}"
+            print(f"Fetching category '{category_id}' - Page {page}: {page_url}")
 
             try:
-                # Detect extension from original URL (default to .jpg if missing)
-                parsed_path = urlparse(src).path
-                ext = os.path.splitext(parsed_path)[1].lower()
-                if ext not in ['.png', '.jpg', '.jpeg', '.webp']:
-                    ext = '.jpg'
+                response = requests.get(page_url, headers=HEADERS, timeout=15)
+                response.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                print(f"Failed to fetch {page_url}: {e}")
+                break
 
-                # Formulate the clean custom name pattern: 1_.jpg, 2_.png, etc.
-                img_name = f"{counter}_{ext}"
+            soup = BeautifulSoup(response.text, 'html.parser')
+            wallpapers = soup.select('picture img, .thumb-container img, .thumb-pic img')
 
-                save_path = os.path.join(category_dir, img_name)
+            if not wallpapers:
+                print(f"Reached the end of pagination for '{category_id}'.")
+                break
 
-                # Download the image
-                if not os.path.exists(save_path):
-                    img_data = requests.get(src, headers=HEADERS, timeout=10).content
-                    with open(save_path, 'wb') as f:
-                        f.write(img_data)
+            found_new_on_page = False
+
+            for img in wallpapers:
+                src = img.get('src') or img.get('data-src')
                 
-                # Create structured JSON entry for Flutter
-                entry = {
-                    "id": f"{category}_{counter}",
-                    "category": category,
-                    "file_name": img_name,
-                    "local_path": save_path.replace("\\", "/"),
-                    "original_url": src
-                }
-                
-                database.append(entry)
-                existing_urls.add(src)
-                counter += 1
-                downloaded_total += 1
-                
-                print(f"Downloaded: {category}/{img_name}")
+                if not src or not src.startswith('http'):
+                    continue
 
-            except Exception as e:
-                print(f"Error processing {src}: {e}")
+                if src.endswith('.svg') or any(keyword in src for keyword in ['avatar', 'logo', 'icon', 'badge']):
+                    continue
 
-    save_json(database)
-    print(f"Finished. Downloaded {downloaded_total} wallpapers with custom naming.")
+                try:
+                    parsed_path = urlparse(src).path
+                    ext = os.path.splitext(parsed_path)[1].lower()
+                    if ext not in ['.png', '.jpg', '.jpeg', '.webp']:
+                        ext = '.jpg'
+
+                    img_name = f"{counter}_{ext}"
+                    save_path = os.path.join(category_dir, img_name)
+
+                    # Download image if it doesn't exist locally
+                    if not os.path.exists(save_path):
+                        img_data = requests.get(src, headers=HEADERS, timeout=10).content
+                        with open(save_path, 'wb') as f:
+                            f.write(img_data)
+                        print(f"Downloaded: {category_id}/{img_name}")
+
+                    # Construct GitHub Raw URL matching your exact structure
+                    image_url = f"{BASE_RAW_URL}/{BASE_DIR}/{category_id}/{img_name}"
+                    wallpaper_id = f"{category_id}_{counter}"
+                    tags = CATEGORY_TAGS.get(category_id, ["cute", "wallpaper"])
+
+                    wallpaper_entry = {
+                        "id": wallpaper_id,
+                        "imageUrl": image_url,
+                        "tags": tags
+                    }
+
+                    category_wallpapers.append(wallpaper_entry)
+                    all_downloaded_wallpapers.append(image_url)
+                    
+                    counter += 1
+                    found_new_on_page = True
+
+                except Exception as e:
+                    print(f"Error processing image in {category_id}: {e}")
+
+            if not found_new_on_page and page > 1:
+                break
+
+            page += 1
+
+        # Append category block
+        category_block = {
+            "id": category_id,
+            "name": category_id.capitalize(),
+            "wallpapers": category_wallpapers
+        }
+        master_data["categories"].append(category_block)
+
+    # Populate hero images using the first 3 downloaded wallpapers (or fewer if less exist)
+    hero_limit = min(3, len(all_downloaded_wallpapers))
+    for i in range(hero_limit):
+        master_data["heroImages"].append({
+            "id": f"hero_{i + 1}",
+            "heroImageUrl": all_downloaded_wallpapers[i]
+        })
+
+    # Save out to wallpapers.json
+    with open(JSON_FILE, 'w', encoding='utf-8') as f:
+        json.dump(master_data, f, indent=4, ensure_ascii=False)
+
+    print(f"Successfully generated {JSON_FILE} with structured categories and hero images.")
 
 if __name__ == "__main__":
     fetch_wallpapers()
