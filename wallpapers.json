@@ -1,0 +1,189 @@
+{
+    "heroImages": [
+        {
+            "id": "hero_1",
+            "heroImageUrl": "https://raw.githubusercontent.com/abdelhakimelmoumen/CuteWall-API/refs/heads/main/hero/1_.png"
+        },
+        {
+            "id": "hero_2",
+            "heroImageUrl": "https://raw.githubusercontent.com/abdelhakimelmoumen/CuteWall-API/refs/heads/main/hero/2_.png"
+        },
+        {
+            "id": "hero_3",
+            "heroImageUrl": "https://raw.githubusercontent.com/abdelhakimelmoumen/CuteWall-API/refs/heads/main/hero/3_.png"
+        }
+    ],
+    "categories": [
+        {
+            "id": "kawaii",
+            "name": "Kawaii",
+            "wallpapers": [
+                {
+                    "id": "kawaii_1",
+                    "imageUrl": "https://raw.githubusercontent.com/abdelhakimelmoumen/CuteWall-API/refs/heads/main/wallpapers/kawaii/1_.webp",
+                    "tags": [
+                        "anime",
+                        "cartoon",
+                        "chibi",
+                        "cute",
+                        "kawaii"
+                    ]
+                },
+                {
+                    "id": "kawaii_2",
+                    "imageUrl": "https://raw.githubusercontent.com/abdelhakimelmoumen/CuteWall-API/refs/heads/main/wallpapers/kawaii/2_.webp",
+                    "tags": [
+                        "anime",
+                        "cartoon",
+                        "chibi",
+                        "cute",
+                        "kawaii"
+                    ]
+                },
+                {
+                    "id": "kawaii_3",
+                    "imageUrl": "https://raw.githubusercontent.com/abdelhakimelmoumen/CuteWall-API/refs/heads/main/wallpapers/kawaii/3_.webp",
+                    "tags": [
+                        "anime",
+                        "cartoon",
+                        "chibi",
+                        "cute",
+                        "kawaii"
+                    ]
+                },
+                {
+                    "id": "kawaii_4",
+                    "imageUrl": "https://raw.githubusercontent.com/abdelhakimelmoumen/CuteWall-API/refs/heads/main/wallpapers/kawaii/4_.webp",
+                    "tags": [
+                        "anime",
+                        "cartoon",
+                        "chibi",
+                        "cute",
+                        "kawaii"
+                    ]
+                },
+                {
+                    "id": "kawaii_5",
+                    "imageUrl": "https://raw.githubusercontent.com/abdelhakimelmoumen/CuteWall-API/refs/heads/main/wallpapers/kawaii/5_.webp",
+                    "tags": [
+                        "anime",
+                        "cartoon",
+                        "chibi",
+                        "cute",
+                        "kawaii"
+                    ]
+                },
+                {
+                    "id": "kawaii_6",
+                    "imageUrl": "https://raw.githubusercontent.com/abdelhakimelmoumen/CuteWall-API/refs/heads/main/wallpapers/kawaii/6_.webp",
+                    "tags": [
+                        "anime",
+                        "cartoon",
+                        "chibi",
+                        "cute",
+                        "kawaii"
+                    ]
+                },
+                {
+                    "id": "kawaii_7",
+                    "imageUrl": "https://raw.githubusercontent.com/abdelhakimelmoumen/CuteWall-API/refs/heads/main/wallpapers/kawaii/7_.webp",
+                    "tags": [
+                        "anime",
+                        "cartoon",
+                        "chibi",
+                        "cute",
+                        "kawaii"
+                    ]
+                },
+                {
+                    "id": "kawaii_8",
+                    "imageUrl": "https://raw.githubusercontent.com/abdelhakimelmoumen/CuteWall-API/refs/heads/main/wallpapers/kawaii/8_.webp",
+                    "tags": [
+                        "anime",
+                        "cartoon",
+                        "chibi",
+                        "cute",
+                        "kawaii"
+                    ]
+                },
+                {
+                    "id": "kawaii_9",
+                    "imageUrl": "https://raw.githubusercontent.com/abdelhakimelmoumen/CuteWall-API/refs/heads/main/wallpapers/kawaii/9_.webp",
+                    "tags": [
+                        "anime",
+                        "cartoon",
+                        "chibi",
+                        "cute",
+                        "kawaii"
+                    ]
+                },
+                {
+                    "id": "kawaii_10",
+                    "imageUrl": "https://raw.githubusercontent.com/abdelhakimelmoumen/CuteWall-API/refs/heads/main/wallpapers/kawaii/10_.webp",
+                    "tags": [
+                        "anime",
+                        "cartoon",
+                        "chibi",
+                        "cute",
+                        "kawaii"
+                    ]
+                },
+                {
+                    "id": "kawaii_11",
+                    "imageUrl": "https://raw.githubusercontent.com/abdelhakimelmoumen/CuteWall-API/refs/heads/main/wallpapers/kawaii/11_.webp",
+                    "tags": [
+                        "anime",
+                        "cartoon",
+                        "chibi",
+                        "cute",
+                        "kawaii"
+                    ]
+                },
+                {
+                    "id": "kawaii_12",
+                    "imageUrl": "https://raw.githubusercontent.com/abdelhakimelmoumen/CuteWall-API/refs/heads/main/wallpapers/kawaii/12_.webp",
+                    "tags": [
+                        "anime",
+                        "cartoon",
+                        "chibi",
+                        "cute",
+                        "kawaii"
+                    ]
+                },
+                {
+                    "id": "kawaii_13",
+                    "imageUrl": "https://raw.githubusercontent.com/abdelhakimelmoumen/CuteWall-API/refs/heads/main/wallpapers/kawaii/13_.webp",
+                    "tags": [
+                        "anime",
+                        "cartoon",
+                        "chibi",
+                        "cute",
+                        "kawaii"
+                    ]
+                },
+                {
+                    "id": "kawaii_14",
+                    "imageUrl": "https://raw.githubusercontent.com/abdelhakimelmoumen/CuteWall-API/refs/heads/main/wallpapers/kawaii/14_.webp",
+                    "tags": [
+                        "anime",
+                        "cartoon",
+                        "chibi",
+                        "cute",
+                        "kawaii"
+                    ]
+                },
+                {
+                    "id": "kawaii_15",
+                    "imageUrl": "https://raw.githubusercontent.com/abdelhakimelmoumen/CuteWall-API/refs/heads/main/wallpapers/kawaii/15_.webp",
+                    "tags": [
+                        "anime",
+                        "cartoon",
+                        "chibi",
+                        "cute",
+                        "kawaii"
+                    ]
+                }
+            ]
+        }
+    ]
+}
