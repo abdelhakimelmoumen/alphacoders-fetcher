@@ -52,7 +52,7 @@ def fetch_wallpapers():
         wallpapers = soup.select('picture img, .thumb-container img, .thumb-pic img')
 
         # Find the next available index for this category based on what's already in the database
-        category_entries = [e for e in database if e.get('category'] == category]
+        category_entries = [e for e in database if e.get('category') == category]
         counter = len(category_entries) + 1
 
         for img in wallpapers:
