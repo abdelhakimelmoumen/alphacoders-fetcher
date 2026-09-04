@@ -4,7 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 
-# Add new categories and URLs here
+# Add your categories here
 CATEGORIES = {
     "kawaii": "https://alphacoders.com/kawaii-wallpapers"
 }
@@ -32,7 +32,6 @@ def save_json(data):
 
 def fetch_wallpapers():
     database = load_json()
-    # Track existing URLs to avoid downloading the same image twice
     existing_urls = {entry.get('original_url') for entry in database if 'original_url' in entry}
     
     downloaded_total = 0
@@ -50,15 +49,21 @@ def fetch_wallpapers():
             continue
 
         soup = BeautifulSoup(response.text, 'html.parser')
-        images = soup.find_all('img')
+        
+        # TARGETING FIX:
+        # AlphaCoders puts actual wallpapers inside <picture> tags within the gallery grid.
+        # We also look for standard <img> tags specifically inside .thumb-container.
+        # This completely ignores site headers, SVGs, avatars, and logos.
+        wallpapers = soup.select('picture img, .thumb-container img, .thumb-pic img')
 
-        for img in images:
-            src = img.get('src')
+        for img in wallpapers:
+            src = img.get('src') or img.get('data-src')
+            
             if not src or not src.startswith('http'):
                 continue
 
-            # Ignore UI elements
-            if 'avatar' in src or 'logo' in src:
+            # Extra safety check: hard block SVGs and known UI keywords
+            if src.endswith('.svg') or any(keyword in src for keyword in ['avatar', 'logo', 'icon', 'badge']):
                 continue
 
             if src in existing_urls:
@@ -66,6 +71,8 @@ def fetch_wallpapers():
 
             try:
                 img_name = os.path.basename(urlparse(src).path)
+                
+                # Ensure valid extension
                 if not img_name.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')):
                     img_name += '.jpg'
 
@@ -77,12 +84,12 @@ def fetch_wallpapers():
                     with open(save_path, 'wb') as f:
                         f.write(img_data)
                 
-                # Create the structured JSON entry
+                # Create structured JSON entry for Flutter
                 entry = {
                     "id": img_name.split('.')[0],
                     "category": category,
                     "file_name": img_name,
-                    "local_path": save_path.replace("\\", "/"), # Forward slashes for Dart/Flutter compatibility
+                    "local_path": save_path.replace("\\", "/"),
                     "original_url": src
                 }
                 
@@ -96,7 +103,7 @@ def fetch_wallpapers():
                 print(f"Error processing {src}: {e}")
 
     save_json(database)
-    print(f"Finished. Downloaded {downloaded_total} new wallpapers and updated JSON database.")
+    print(f"Finished. Downloaded {downloaded_total} actual wallpapers.")
 
 if __name__ == "__main__":
     fetch_wallpapers()
