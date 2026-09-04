@@ -52,7 +52,7 @@ def fetch_wallpapers():
         wallpapers = soup.select('picture img, .thumb-container img, .thumb-pic img')
 
         # Find the next available index for this category based on what's already in the database
-        category_entries = [e for e in database if e.get('category') == category]
+        category_entries = [e for e in database if e.get('category'] == category]
         counter = len(category_entries) + 1
 
         for img in wallpapers:
@@ -74,14 +74,8 @@ def fetch_wallpapers():
                 if ext not in ['.png', '.jpg', '.jpeg', '.webp']:
                     ext = '.jpg'
 
-                # Formulate the requested name pattern: e.g., 1_.jpg, 2_.png
-                img_name = f"{counter}_{}{ext}".replace("{}", "") # Results in 1_.jpg, etc.
-                # Cleaner format: f"{counter}_" + ext[1:] -> e.g. 1_.jpg
-                img_name = f"{counter}_{ext[1:]}" # Wait, let's keep it strictly like 1_.jpg or 1_.png
-                img_name = f"{counter}_{ext.replace('.', '')}" # or let's use explicit string:
-                img_name = f"{counter}_{ext}" # wait, ext has the dot. Let's do:
-                ext_clean = ext.lstrip('.')
-                img_name = f"{counter}_.{ext_clean}" # yields 1_.png or 1_.jpg
+                # Formulate the clean custom name pattern: 1_.jpg, 2_.png, etc.
+                img_name = f"{counter}_{ext}"
 
                 save_path = os.path.join(category_dir, img_name)
 
