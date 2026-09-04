@@ -2,7 +2,7 @@ import os
 import json
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 
 CATEGORIES = {
     "kawaii": "https://alphacoders.com/kawaii-wallpapers"
@@ -29,7 +29,6 @@ CATEGORY_TAGS = {
 }
 
 def fetch_wallpapers():
-    # Master structure with default/placeholder hero images
     master_data = {
         "heroImages": [
             {
@@ -48,33 +47,35 @@ def fetch_wallpapers():
         "categories": []
     }
 
-    for category_id, base_url in CATEGORIES.items():
+    for category_id, start_url in CATEGORIES.items():
         category_dir = os.path.join(BASE_DIR, category_id)
         os.makedirs(category_dir, exist_ok=True)
         
         category_wallpapers = []
         counter = 1
+        current_url = start_url
         page = 1
+        visited_urls = set()
 
-        while True:
-            page_url = f"{base_url}?page={page}"
-            print(f"Fetching category '{category_id}' - Page {page}: {page_url}")
+        while current_url and current_url not in visited_urls:
+            visited_urls.add(current_url)
+            print(f"Fetching category '{category_id}' - Page {page}: {current_url}")
 
             try:
-                response = requests.get(page_url, headers=HEADERS, timeout=15)
+                response = requests.get(current_url, headers=HEADERS, timeout=15)
                 response.raise_for_status()
             except requests.exceptions.RequestException as e:
-                print(f"Failed to fetch {page_url}: {e}")
+                print(f"Failed to fetch {current_url}: {e}")
                 break
 
             soup = BeautifulSoup(response.text, 'html.parser')
             wallpapers = soup.select('picture img, .thumb-container img, .thumb-pic img')
 
             if not wallpapers:
-                print(f"Reached the end of pagination for '{category_id}'.")
+                print(f"No wallpapers found on {current_url}.")
                 break
 
-            found_new_on_page = False
+            new_images_on_page = 0
 
             for img in wallpapers:
                 src = img.get('src') or img.get('data-src')
@@ -104,23 +105,37 @@ def fetch_wallpapers():
                     wallpaper_id = f"{category_id}_{counter}"
                     tags = CATEGORY_TAGS.get(category_id, ["cute", "wallpaper"])
 
-                    wallpaper_entry = {
-                        "id": wallpaper_id,
-                        "imageUrl": image_url,
-                        "tags": tags
-                    }
-
-                    category_wallpapers.append(wallpaper_entry)
-                    counter += 1
-                    found_new_on_page = True
+                    # Prevent duplicate array entries if the same thumbnail is referenced multiple times
+                    if not any(w['imageUrl'] == image_url for w in category_wallpapers):
+                        category_wallpapers.append({
+                            "id": wallpaper_id,
+                            "imageUrl": image_url,
+                            "tags": tags
+                        })
+                        counter += 1
+                        new_images_on_page += 1
 
                 except Exception as e:
-                    print(f"Error processing image in {category_id}: {e}")
+                    print(f"Error processing image: {e}")
 
-            if not found_new_on_page and page > 1:
+            print(f"Processed {new_images_on_page} new wallpapers from this page.")
+
+            # Dynamically find the "Next" page link from the website's pagination layout
+            next_link = soup.select_one('a.next, .pagination a:-soup-contains(">"), .pagination a:-soup-contains("Next"), ul.pagination li.active + li a')
+            
+            # Fallback search strategy for common pagination button classes if specific selectors miss
+            if not next_link:
+                for a in soup.select('.pagination a, .pages a'):
+                    if 'next' in a.text.lower() or '»' in a.text or '>' in a.text:
+                        next_link = a
+                        break
+
+            if next_link and next_link.get('href'):
+                current_url = urljoin(start_url, next_link.get('href'))
+                page += 1
+            else:
+                print(f"Reached the last page for '{category_id}'.")
                 break
-
-            page += 1
 
         category_block = {
             "id": category_id,
@@ -132,7 +147,7 @@ def fetch_wallpapers():
     with open(JSON_FILE, 'w', encoding='utf-8') as f:
         json.dump(master_data, f, indent=4, ensure_ascii=False)
 
-    print(f"Successfully generated {JSON_FILE} with default hero images and categories.")
+    print(f"Successfully generated {JSON_FILE} with all scraped wallpapers.")
 
 if __name__ == "__main__":
     fetch_wallpapers()
