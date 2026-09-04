@@ -1,20 +1,15 @@
 import os
 import json
 import requests
-from bs4::BeautifulSoup import BeautifulSoup # wait, standard import is just from bs4 import BeautifulSoup
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 
-# Define your categories and their source URLs here
 CATEGORIES = {
-    "kawaii": "https://alphacoders.com/kawaii-wallpapers",
-    # Add more categories here as needed, e.g.:
-    # "pastel": "https://alphacoders.com/pastel-wallpapers",
+    "kawaii": "https://alphacoders.com/kawaii-wallpapers"
 }
 
-# Your GitHub raw base URL template
 GITHUB_USER = "abdelhakimelmoumen"
-REPO_NAME = "CuteWall-API" # Adjust if your repo name differs
+REPO_NAME = "CuteWall-API"
 BRANCH = "main"
 BASE_RAW_URL = f"https://raw.githubusercontent.com/{GITHUB_USER}/{REPO_NAME}/refs/heads/{BRANCH}"
 
@@ -24,7 +19,6 @@ HEADERS = {
 BASE_DIR = "wallpapers"
 JSON_FILE = "wallpapers.json"
 
-# Default tags map for categories
 CATEGORY_TAGS = {
     "kawaii": ["anime", "cartoon", "chibi", "cute", "kawaii"],
     "pastel": ["aesthetic", "minimal", "pastel", "pink", "soft"],
@@ -35,13 +29,24 @@ CATEGORY_TAGS = {
 }
 
 def fetch_wallpapers():
-    # Structure to hold the final JSON data
+    # Master structure with default/placeholder hero images
     master_data = {
-        "heroImages": [],
+        "heroImages": [
+            {
+                "id": "hero_1",
+                "heroImageUrl": f"{BASE_RAW_URL}/hero/1_.png"
+            },
+            {
+                "id": "hero_2",
+                "heroImageUrl": f"{BASE_RAW_URL}/hero/2_.png"
+            },
+            {
+                "id": "hero_3",
+                "heroImageUrl": f"{BASE_RAW_URL}/hero/3_.png"
+            }
+        ],
         "categories": []
     }
-
-    all_downloaded_wallpapers = []
 
     for category_id, base_url in CATEGORIES.items():
         category_dir = os.path.join(BASE_DIR, category_id)
@@ -89,14 +94,12 @@ def fetch_wallpapers():
                     img_name = f"{counter}_{ext}"
                     save_path = os.path.join(category_dir, img_name)
 
-                    # Download image if it doesn't exist locally
                     if not os.path.exists(save_path):
                         img_data = requests.get(src, headers=HEADERS, timeout=10).content
                         with open(save_path, 'wb') as f:
                             f.write(img_data)
                         print(f"Downloaded: {category_id}/{img_name}")
 
-                    # Construct GitHub Raw URL matching your exact structure
                     image_url = f"{BASE_RAW_URL}/{BASE_DIR}/{category_id}/{img_name}"
                     wallpaper_id = f"{category_id}_{counter}"
                     tags = CATEGORY_TAGS.get(category_id, ["cute", "wallpaper"])
@@ -108,8 +111,6 @@ def fetch_wallpapers():
                     }
 
                     category_wallpapers.append(wallpaper_entry)
-                    all_downloaded_wallpapers.append(image_url)
-                    
                     counter += 1
                     found_new_on_page = True
 
@@ -121,7 +122,6 @@ def fetch_wallpapers():
 
             page += 1
 
-        # Append category block
         category_block = {
             "id": category_id,
             "name": category_id.capitalize(),
@@ -129,19 +129,10 @@ def fetch_wallpapers():
         }
         master_data["categories"].append(category_block)
 
-    # Populate hero images using the first 3 downloaded wallpapers (or fewer if less exist)
-    hero_limit = min(3, len(all_downloaded_wallpapers))
-    for i in range(hero_limit):
-        master_data["heroImages"].append({
-            "id": f"hero_{i + 1}",
-            "heroImageUrl": all_downloaded_wallpapers[i]
-        })
-
-    # Save out to wallpapers.json
     with open(JSON_FILE, 'w', encoding='utf-8') as f:
         json.dump(master_data, f, indent=4, ensure_ascii=False)
 
-    print(f"Successfully generated {JSON_FILE} with structured categories and hero images.")
+    print(f"Successfully generated {JSON_FILE} with default hero images and categories.")
 
 if __name__ == "__main__":
     fetch_wallpapers()
