@@ -49,12 +49,11 @@ def fetch_wallpapers():
             continue
 
         soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # TARGETING FIX:
-        # AlphaCoders puts actual wallpapers inside <picture> tags within the gallery grid.
-        # We also look for standard <img> tags specifically inside .thumb-container.
-        # This completely ignores site headers, SVGs, avatars, and logos.
         wallpapers = soup.select('picture img, .thumb-container img, .thumb-pic img')
+
+        # Find the next available index for this category based on what's already in the database
+        category_entries = [e for e in database if e.get('category') == category]
+        counter = len(category_entries) + 1
 
         for img in wallpapers:
             src = img.get('src') or img.get('data-src')
@@ -62,7 +61,6 @@ def fetch_wallpapers():
             if not src or not src.startswith('http'):
                 continue
 
-            # Extra safety check: hard block SVGs and known UI keywords
             if src.endswith('.svg') or any(keyword in src for keyword in ['avatar', 'logo', 'icon', 'badge']):
                 continue
 
@@ -70,11 +68,20 @@ def fetch_wallpapers():
                 continue
 
             try:
-                img_name = os.path.basename(urlparse(src).path)
-                
-                # Ensure valid extension
-                if not img_name.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')):
-                    img_name += '.jpg'
+                # Detect extension from original URL (default to .jpg if missing)
+                parsed_path = urlparse(src).path
+                ext = os.path.splitext(parsed_path)[1].lower()
+                if ext not in ['.png', '.jpg', '.jpeg', '.webp']:
+                    ext = '.jpg'
+
+                # Formulate the requested name pattern: e.g., 1_.jpg, 2_.png
+                img_name = f"{counter}_{}{ext}".replace("{}", "") # Results in 1_.jpg, etc.
+                # Cleaner format: f"{counter}_" + ext[1:] -> e.g. 1_.jpg
+                img_name = f"{counter}_{ext[1:]}" # Wait, let's keep it strictly like 1_.jpg or 1_.png
+                img_name = f"{counter}_{ext.replace('.', '')}" # or let's use explicit string:
+                img_name = f"{counter}_{ext}" # wait, ext has the dot. Let's do:
+                ext_clean = ext.lstrip('.')
+                img_name = f"{counter}_.{ext_clean}" # yields 1_.png or 1_.jpg
 
                 save_path = os.path.join(category_dir, img_name)
 
@@ -86,7 +93,7 @@ def fetch_wallpapers():
                 
                 # Create structured JSON entry for Flutter
                 entry = {
-                    "id": img_name.split('.')[0],
+                    "id": f"{category}_{counter}",
                     "category": category,
                     "file_name": img_name,
                     "local_path": save_path.replace("\\", "/"),
@@ -95,6 +102,7 @@ def fetch_wallpapers():
                 
                 database.append(entry)
                 existing_urls.add(src)
+                counter += 1
                 downloaded_total += 1
                 
                 print(f"Downloaded: {category}/{img_name}")
@@ -103,7 +111,7 @@ def fetch_wallpapers():
                 print(f"Error processing {src}: {e}")
 
     save_json(database)
-    print(f"Finished. Downloaded {downloaded_total} actual wallpapers.")
+    print(f"Finished. Downloaded {downloaded_total} wallpapers with custom naming.")
 
 if __name__ == "__main__":
     fetch_wallpapers()
